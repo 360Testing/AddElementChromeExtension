@@ -1,0 +1,22 @@
+{
+  "name": "The Test Mart Add Element",
+  "version": "0.1",
+  "manifest_version" : 2,
+  "description": "Adds elements to the test mart",
+  "background":
+    {
+        "scripts": ["jquery-3.5.1.js", "background.js"]
+    },
+  "browser_action": {
+    "default_icon": "icons/icon_menu64.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+        "js": [ 
+            "jquery-3.5.1.js",
+            "addelement.js" ]
+    } 
+],
+  "permissions": ["activeTab"]
+}

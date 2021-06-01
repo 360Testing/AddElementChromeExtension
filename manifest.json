@@ -1,22 +1,32 @@
 {
-  "name": "The Test Mart Add Element",
-  "version": "0.1",
-  "manifest_version" : 2,
-  "description": "Adds elements to the test mart",
-  "background":
-    {
-        "scripts": ["jquery-3.5.1.js", "background.js"]
-    },
-  "browser_action": {
-    "default_icon": "icons/icon_menu64.png"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-        "js": [ 
-            "jquery-3.5.1.js",
-            "addelement.js" ]
-    } 
-],
-  "permissions": ["activeTab"]
+   "author": "Rosen Suvariev \u003Crsuvariev@i-covereurope.com>",
+   "background": {
+      "persistent": false,
+      "scripts": [ "jquery.js", "background.js" ]
+   },
+   "browser_action": {
+      "default_icon": {
+         "19": "icon_19x19.png"
+      },
+      "default_title": "The Test Mart Add Element"
+   },
+   "content_scripts": [ {
+      "js": [  "jquery.js","contentscript.js" ],
+      "matches": [ "\u003Call_urls>" ]
+   } ],
+   "description": "Toggle active state by clicking the extention icon. Then click on the element you would like to add, name it then toggle the state once completed",
+   "icons": {
+      "128": "icon_128x128.png",
+      "16": "icon_16x16.png",
+      "19": "icon_19x19.png",
+      "32": "icon_32x32.png",
+      "38": "icon_38x38.png",
+      "48": "icon_48x48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg55wYfPvSIxqHHut2d9XyC+7ecEZQ0eFSDjcktDzkFfEv6bzntuf6h603x4sUi5tpHyU7fPzLsl/F20zMGJREbKh+C3b8uCotV1Qj+bViAb0Py2q04KSnhf2BaMlc/pbt8UuwGYkps/XO4p2rQ4AMvj/PXg9kFkGNvBdVxwUCkScmwnJxbdOYuPFueaI/f7o7Oe0U2yhUKmohLZPK997tHIZCFRXAX2uXfiB+onjwlqMRJEb7IaI0ctW1bln7ZWkxrdoED4VhmkUdhzv09XNb7T10vAPumNyzgnJdda+c7oOt4iUpS4bxvhZyiZe2WX+WqKiLfG3j73hWWD+TIt0swIDAQAB",
+   "manifest_version": 2,
+   "minimum_chrome_version": "49.0.0",
+   "name": "The Test Mart Add Element",
+   "permissions": [ "activeTab" ],
+   "version": "0.0.6.0"
 }

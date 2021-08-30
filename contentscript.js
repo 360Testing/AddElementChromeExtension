@@ -1,7 +1,12 @@
+console.log("TheTestMart content script LOADED");
+
+
 var PROJECT = "Finops";
 var CUSTOMER = "TheTestMart";
 var DEBUG_MODE = false,
     ACTIVE_STATE = undefined;
+	
+var currentElem = undefined;	
 
 
 
@@ -136,150 +141,286 @@ var DEBUG_MODE = false,
       function getFullName(e, loopCount) {
         var element = e;
         var document = element.ownerDocument;
-        var eleName ="";
-        var textElement=element;
+        var eleName = "";
+        var textElement = element;
         var count = 0;
-      
-      
-        if(element.getAttribute("data-dyn-savedtooltip")!==null && element.getAttribute("data-dyn-savedtooltip")!="") {
-          var text = element.getAttribute("data-dyn-savedtooltip");
-          eleName =  text;
+        var eleType = "standard"
+    
+        if (element.getAttribute("data-dyn-savedtooltip") !== null && element.getAttribute("data-dyn-savedtooltip") != "") {
+            var text = element.getAttribute("data-dyn-savedtooltip");
+            eleName = text;
         }
-        if(eleName=="" && element.getAttribute("aria-label")!==null && element.getAttribute("aria-label")!=""){
+    
+    
+        var sRole = "";
+        if (eleName == "" && element.getAttribute("role") !== null && element.getAttribute("role") != "") {
+            sRole = element.getAttribute("role");
+        }
+    
+        if ((sRole == "switch") || (element.className == "toggle-box") || (element.className == "toggle-value")) {
+            //data-dyn-role="CheckBox"
+            var checkBox = element.closest('[data-dyn-role="CheckBox"]')
+            var checkBoxName = checkBox.getElementsByClassName("staticText label checkBox-label").item(0)
+            return checkBoxName.textContent + " radio"
+    
+    
+    
+            
+            //var eleFor = document.querySelectorAll("[for='" + element.id + "']")[0];
+    
+            //eleName = eleFor.textContent.trim();
+    
+            //var coll = document.querySelectorAll('[role="switch"], .toggle-box, .toggle-value');
+            //if (coll.length > 1) {
+            //    var iCount = 0;
+            //    for (var i = 0; i < coll.length; i++) {
+            //        iCount++
+            //        if (coll[i] == element) {
+            //            eleName = eleName + "[" + iCount + "]";
+            //            break;
+            //        }
+            //    }
+           // }
+    
+            //eleName = eleName + "radio";
+            //return eleName;
+        }
+    
+    
+    
+        var sDataDynRole = "";
+        if (eleName == "" && element.getAttribute("data-dyn-role") !== null && element.getAttribute("data-dyn-role") != "") {
+            sDataDynRole = element.getAttribute("data-dyn-role");
+        }
+    
+        console.log("checking menu")
+        var parentAppBarSection = element.closest('[data-dyn-role = "AppBarSection"]');
+        if (parentAppBarSection) {
+            eleType = "menu"
+            console.log("Element is menu item")
+        }
+    
+        console.log("checking table")
+        var parentAppBarSection = element.closest('[role="grid"]');
+        if (parentAppBarSection) {
+            var tables = document.querySelectorAll("[role='grid']")
+            var columnHeaderEle = element.closest('[data-dyn-role="ColumnHeader"]');
+            if (columnHeaderEle) {
+                eleType = "header"
+                console.log("Element is header")
+                eleName = columnHeaderEle.textContent
+                count = 1
+                tableNum = 0
+                for (var i = 0; i < tables.length; i++) {
+                    tableNum = tableNum + 1
+                    if (tables[i] == parentAppBarSection) {
+                        count = tableNum;
+                    }
+                }
+                if(count == 1){
+                    console.log(eleName + " header")
+                    return eleName + " header"
+                }else{
+                    console.log(eleName +" ["  + count  + "] header")
+                    return eleName +" ["  + count  + "] header"
+                }
+            }else{
+                eleType = "row"
+                console.log("Element is row") 
+                colindex = element.closest("[data-colindex]")
+                colindexnum = 1
+                if (colindex.getAttribute("data-colindex") !== null && colindex.getAttribute("data-colindex") != "") {
+                    colindexnum = colindex.getAttribute("data-colindex");
+                }
+    
+                headerofEle = parentAppBarSection.querySelector('[data-colindex="'+colindexnum+'"][data-dyn-role="ColumnHeader"]')
+                eleName = headerofEle.textContent
+                count = 1
+                tableNum = 0
+                for (var i = 0; i < tables.length; i++) {
+                    tableNum = tableNum + 1
+                    if (tables[i] == parentAppBarSection) {
+                        count = tableNum;
+                    }
+                }
+    
+    
+                if(count == 1){
+                    console.log(eleName + " row")
+                    return eleName + " row"
+                }else{
+                    console.log(eleName +" ["  + count  + "] row")
+                    return eleName +" ["  + count  + "] row"
+                }
+            }
+        }
+        //table
+        //role="grid"
+    
+        //column header
+        //data-dyn-role="ColumnHeader"
+    
+    
+    
+    
+        if (eleName == "" && element.getAttribute("aria-label") !== null && element.getAttribute("aria-label") != "") {
             var eleName = element.getAttribute("aria-label");
             var quickcount = 0
-            try{
-              var elems = document.querySelectorAll("[aria-label='"+eleName+"']");
-              for (var i = 0; i < arrayLength; i++) {
-                  quickcount = quickcount + 1
-                  if(elems[i]==element){
-                      count = quickcount;
-                  }
-              }
-            }catch(err){
-              console.log(err)
+            try {
+                var elems = document.querySelectorAll("[aria-label='" + eleName + "']");
+                for (var i = 0; i < elems.length; i++) {
+                    quickcount = quickcount + 1
+                    if (elems[i] == element) {
+                        count = quickcount;
+                    }
+                }
+            } catch (err) {
+                console.log(err)
             }
-            if(element.getAttribute("data-colindex")!==null && element.getAttribute("data-colindex")!=""){
-              eleName = eleName + " row"
+            if (element.getAttribute("data-colindex") !== null && element.getAttribute("data-colindex") != "") {
+                eleName = eleName + " row"
             }
-        } if(eleName=="" && element.id!="" && element.id != null && element.id !== undefined && document.querySelectorAll("[for='"+element.id+"']").length>0) {
-          var ele = document.querySelectorAll("[for='"+element.id+"']")[0];
-          eleName = ele.textContent.trim();
-          textElement = ele;
-      } if(eleName=="" && element.getAttribute("aria-label")!==null && element.getAttribute("aria-label")!="") {
-          var text = element.getAttribute("aria-label");
-          eleName =  text;
-      }  if(eleName=="" && element.getAttribute("aria-labelledby")!==null && element.getAttribute("aria-labelledby")!="") {
+        }
+        if (eleName == "" && element.id != "" && element.id != null && element.id !== undefined && document.querySelectorAll("[for='" + element.id + "']").length > 0) {
+            var ele = document.querySelectorAll("[for='" + element.id + "']")[0];
+            eleName = ele.textContent.trim();
+            textElement = ele;
+        }
+        if (eleName == "" && element.getAttribute("aria-label") !== null && element.getAttribute("aria-label") != "") {
+            var text = element.getAttribute("aria-label");
+            eleName = text;
+        } if (eleName == "" && element.getAttribute("aria-labelledby") !== null && element.getAttribute("aria-labelledby") != "") {
             var id_to_find = element.getAttribute("aria-labelledby");
             var ele = document.getElementById(id_to_find);
             eleName = ele.textContent.trim();
             textElement = ele;
-        } if(eleName=="" && element.getAttribute("aria-describedby")!==null && element.getAttribute("aria-describedby")!="") {
-          var id_to_find = element.getAttribute("aria-describedby");
-          var ele = document.getElementById(id_to_find);
-          eleName = ele.textContent.trim();
-          textElement = ele;
-      }if(eleName=="" && element.textContent!=""){
-        var eleName= element.textContent.trim();
-      }
-      if(eleName=="" && element.getAttribute("data-dyn-title")!==null && element.getAttribute("data-dyn-title")!="") {
-          var text = element.getAttribute("data-dyn-title");
-          eleName = text;
-        }if(eleName=="" && element.getAttribute("alt")!==null && element.getAttribute("alt")!="") {
-          var text = element.getAttribute("alt");
-          eleName = text;
-        }if(eleName=="" && element.getAttribute("value")!==null && element.getAttribute("value")!="") {
+        } if (eleName == "" && element.getAttribute("aria-describedby") !== null && element.getAttribute("aria-describedby") != "") {
+            var id_to_find = element.getAttribute("aria-describedby");
+            var ele = document.getElementById(id_to_find);
+            eleName = ele.textContent.trim();
+            textElement = ele;
+        } if (eleName == "" && element.textContent != "") {
+            var eleName = element.textContent.trim();
+        }
+        if (eleName == "" && element.getAttribute("data-dyn-title") !== null && element.getAttribute("data-dyn-title") != "") {
+            var text = element.getAttribute("data-dyn-title");
+            eleName = text;
+        } if (eleName == "" && element.getAttribute("alt") !== null && element.getAttribute("alt") != "") {
+            var text = element.getAttribute("alt");
+            eleName = text;
+        } if (eleName == "" && element.getAttribute("value") !== null && element.getAttribute("value") != "") {
             var text = element.getAttribute("value");
             eleName = text;
-        } if(eleName=="" && element.getAttribute("title")!==null && element.getAttribute("title")!="") {
+        } if (eleName == "" && element.getAttribute("title") !== null && element.getAttribute("title") != "") {
             var text = element.getAttribute("title");
             eleName = text;
-        } if(eleName=="" && element.getAttribute("id")!==null && element.getAttribute("id")!="") {
+        } if (eleName == "" && element.getAttribute("id") !== null && element.getAttribute("id") != "") {
             var text = element.getAttribute("id");
             eleName = text;
-        } if(eleName==""){
-          eleName = "unnamed";
+        } if (eleName == "") {
+            eleName = "unnamed";
         }
-        
+    
         var elems = document.querySelectorAll("*")
         var arrayLength = elems.length;
-        
-        if(eleName != "unnamed" && count>1){
-            eleName = eleName+"["+count+"]";
+    
+        if (eleName != "unnamed" && count > 1) {
+            eleName = eleName + "[" + count + "]";
         }
-        
+    
         function isDescendant(parent, child) {
-          var node = child.parentNode;
-          while (node != null) {
-              if (node == parent) {
-                  return true;
-              }
-              node = node.parentNode;
-          }
-          return false;
-      }
-      
-      
-      if(eleName != "unnamed" && count==0){
-         var visibleEles = [];
-           for (var i = 0; i < arrayLength; i++) {
-               if(elems[i].textContent == eleName){
-                   var rect = elems[i].getBoundingClientRect();
-                   
-                   if(rect.top ==0 && rect.right ==0 && rect.bottom == 0 && rect.left ==0){
-                     //log element not visible?
-                   }
-                   else{
-                       if(visibleEles.length>0){
-                           var isDesc = false;
-                           for (var j = 0; j < visibleEles.length; j++) {
-                             if(isDescendant(visibleEles[j],elems[i])){
-                                 isDesc = true
-                             }
-                             if(isDescendant(elems[i],visibleEles[j])){
-                              isDesc = true
-                             }
-                           }
-                           if(!isDesc){
-                               count = count+1
-                               visibleEles[visibleEles.length-1] = elems[i]
-                               console.log("recording element "+ count);
-                               console.log(rect.top, rect.right, rect.bottom, rect.left);
-                               console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
-                               console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
-                               console.log(elems[i])
-                           }
-                       }else{
-                         console.log("recording element 1");
-                         console.log(rect.top, rect.right, rect.bottom, rect.left);
-                         console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
-                         console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
-                         console.log(elems[i])
-                         visibleEles[0] = elems[i]
-                         count = count + 1;
-                       }
-                     
-                     //console.log(rect.top, rect.right, rect.bottom, rect.left);
-                     //console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
-               //console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
-                     //console.log(elems[i])
-                   }
-               }
-               if(count>1 && elems[i]==textElement){
-                   eleName = eleName+"["+count+"]";
-               }
-               if(elems[i]==textElement){
-                break;
-               }
-           }
-       }
-        if(eleName == "unnamed"){
-          if(loopCount < 6){
-            eleName = getFullName(e.parentNode, loopCount+1)
-          }
+            var node = child.parentNode;
+            while (node != null) {
+                if (node == parent) {
+                    return true;
+                }
+                node = node.parentNode;
+            }
+            return false;
+        }
+    
+    
+        if (eleName != "unnamed" && count == 0) {
+            var visibleEles = [];
+            for (var i = 0; i < arrayLength; i++) {
+                if (elems[i].textContent == eleName) {
+                    var rect = elems[i].getBoundingClientRect();
+    
+                    if (rect.top == 0 && rect.right == 0 && rect.bottom == 0 && rect.left == 0) {
+                        //log element not visible?
+                    }
+                    else {
+                        incCount = false
+    
+                        var parentAppBarSection = elems[i].closest('[data-dyn-role = "AppBarSection"]');
+                        if(eleType == "menu"&&parentAppBarSection){
+                          incCount = true
+                        }
+                        if(eleType != "menu"){
+    
+                          incCount = true
+                          if(parentAppBarSection){
+                            incCount = false
+                          }
+                        }
+                        if (visibleEles.length > 0) {
+                            var isDesc = false;
+                            for (var j = 0; j < visibleEles.length; j++) {
+                                if (isDescendant(visibleEles[j], elems[i])) {
+                                    isDesc = true
+                                }
+                                if (isDescendant(elems[i], visibleEles[j])) {
+                                    isDesc = true
+                                }
+                            }
+                            if (!isDesc&&incCount) {
+                                count = count + 1
+                                visibleEles[visibleEles.length - 1] = elems[i]
+                                console.log("recording element " + count);
+                                console.log(rect.top, rect.right, rect.bottom, rect.left);
+                                console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
+                                console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
+                                console.log(elems[i])
+                            }
+                        } else {
+                            if(incCount){
+                              console.log("recording element 1");
+                              console.log(rect.top, rect.right, rect.bottom, rect.left);
+                              console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
+                              console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
+                              console.log(elems[i])
+                              visibleEles[0] = elems[i]
+                              count = count + 1;
+                            }
+                        }
+    
+                        //console.log(rect.top, rect.right, rect.bottom, rect.left);
+                        //console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("display"));
+                        //console.log(document.defaultView.getComputedStyle(elems[i], "").getPropertyValue("visibility"));
+                        //console.log(elems[i])
+                    }
+                }
+                if (count > 1 && elems[i] == textElement) {
+                    if(eleType == "menu"){
+                        eleName = eleName + " menu"
+                    }
+                    eleName = eleName + "[" + count + "]";
+                }
+                if (elems[i] == textElement) {
+                    if(eleType == "menu"){
+                        eleName = eleName + " menu"
+                    }
+                    break;
+                }
+            }
+        }
+        if (eleName == "unnamed") {
+            if (loopCount < 6) {
+                eleName = getFullName(e.parentNode, loopCount + 1)
+            }
         }
         return eleName;
-      }
+    }
       
       function xpathHrefid(e) {
         if (e.attributes && e.hasAttribute('id')) {
@@ -589,11 +730,12 @@ var DEBUG_MODE = false,
 function DIOnMouseOver(evt)
 {
     element = evt.target;   // not IE
-
     // set the border around the element
     element.style.outlineWidth = '2px';
     element.style.outlineStyle = 'double';
     element.style.outlineColor = 'orange';
+	
+	currentElem = evt.target;	
 }
 
 // Remove elements border on mouse out
@@ -884,8 +1026,7 @@ formdata.append("pageTitle", title);
 formdata.append("eleName", name);
 formdata.append("locators", locators);
 formdata.append("pageURL", url);
-formdata.append("project", PROJECT);
-formdata.append("customer", CUSTOMER);
+
 
 var requestOptions = {
     mode: "no-cors",
@@ -895,12 +1036,29 @@ var requestOptions = {
   headers: headers
 };
 if(name!=null){
-fetch("http://127.0.0.1:5000/element", requestOptions)
-  .then(response => response.text())
-  .then(result => console.log(result))
-  .catch(error => console.log('error', error));}
-}
+  chrome.extension.sendMessage({type: "get_customer"}, function(response) {
+    console.log("*********")
+    console.log(response)
+    PROJECT = response
+  });
+  chrome.extension.sendMessage({type: "get_project"}, function(response) {
+    console.log("*********")
+    console.log(response)
+    CUSTOMER = response
+  });
+  formdata.append("project", PROJECT);
+  formdata.append("customer", CUSTOMER);
 
+	chrome.extension.sendMessage({type: "get_server"}, function(sServer){
+		console.log('sSever=' + sServer);
+		//fetch("http://127.0.0.1:5000/element", requestOptions)
+		fetch(sServer, requestOptions)
+		.then(response => response.text())
+		.then(result => console.log(result))
+		.catch(error => console.log('error', error));		
+	});
+}
+}
 
 // Main function for building XPATH expression on 
 function build_xpath_on_click(event) {
@@ -1024,6 +1182,7 @@ function toggle_active_state() {
         $('*').off('click', add_xpath_on_click);
         document.removeEventListener("mouseover", DIOnMouseOver, true);
         document.removeEventListener("mouseout", DIOnMouseOut, true);
+		currentElem.style.outlineStyle = 'none';
     }
 }
 

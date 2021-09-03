@@ -202,9 +202,17 @@ var currentElem = undefined;
     
         console.log("checking table")
         var parentAppBarSection = element.closest('[role="grid"]');
+        columnHeaderEle = null
         if (parentAppBarSection) {
             var tables = document.querySelectorAll("[role='grid']")
-            var columnHeaderEle = element.closest('[data-dyn-role="ColumnHeader"]');
+            var columnHeaderEleTest1 = element.closest('[data-dyn-role="ColumnHeader"]');
+            var columnHeaderEleTest2 = element.closest('[role="columnheader"]');
+            if(columnHeaderEleTest2){
+              columnHeaderEle = columnHeaderEleTest2
+            }
+            if(columnHeaderEleTest1){
+              columnHeaderEle = columnHeaderEleTest1
+            }
             if (columnHeaderEle) {
                 eleType = "header"
                 console.log("Element is header")
@@ -228,13 +236,17 @@ var currentElem = undefined;
                 eleType = "row"
                 console.log("Element is row") 
                 colindex = element.closest("[data-colindex]")
-                colindexnum = 1
-                if (colindex.getAttribute("data-colindex") !== null && colindex.getAttribute("data-colindex") != "") {
-                    colindexnum = colindex.getAttribute("data-colindex");
+                if(colindex){
+                  colindexnum = 1
+                  if (colindex.getAttribute("data-colindex") !== null && colindex.getAttribute("data-colindex") != "") {
+                      colindexnum = colindex.getAttribute("data-colindex");
+                  }
+      
+                  headerofEle = parentAppBarSection.querySelector('[data-colindex="'+colindexnum+'"][data-dyn-role="ColumnHeader"]')
+                  eleName = headerofEle.textContent
+                }else{
+                  eleName = element.getAttribute("aria-label")
                 }
-    
-                headerofEle = parentAppBarSection.querySelector('[data-colindex="'+colindexnum+'"][data-dyn-role="ColumnHeader"]')
-                eleName = headerofEle.textContent
                 count = 1
                 tableNum = 0
                 for (var i = 0; i < tables.length; i++) {
@@ -1028,27 +1040,27 @@ formdata.append("locators", locators);
 formdata.append("pageURL", url);
 
 
-var requestOptions = {
+
+if(name!=null){
+  chrome.extension.sendMessage({type: "get_customer"}, function(response) {
+    console.log("*********")
+    console.log(response)
+    sCUSTOMER = response
+  });
+  chrome.extension.sendMessage({type: "get_project"}, function(response) {
+    console.log("*********")
+    console.log(response)
+    sPROJECT = response
+  });
+  formdata.append("project", sPROJECT);
+  formdata.append("customer", sCUSTOMER);
+  var requestOptions = {
     mode: "no-cors",
     method: 'POST',
   body: formdata,
   redirect: 'follow',
   headers: headers
 };
-if(name!=null){
-  chrome.extension.sendMessage({type: "get_customer"}, function(response) {
-    console.log("*********")
-    console.log(response)
-    PROJECT = response
-  });
-  chrome.extension.sendMessage({type: "get_project"}, function(response) {
-    console.log("*********")
-    console.log(response)
-    CUSTOMER = response
-  });
-  formdata.append("project", PROJECT);
-  formdata.append("customer", CUSTOMER);
-
 	chrome.extension.sendMessage({type: "get_server"}, function(sServer){
 		console.log('sSever=' + sServer);
 		//fetch("http://127.0.0.1:5000/element", requestOptions)

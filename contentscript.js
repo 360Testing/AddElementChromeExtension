@@ -369,6 +369,12 @@ function getFullName(e, loopCount) {
     eleName = "unnamed";
   }
 
+  eleName = eleName.replaceAll(/\s\s+/g," ")
+  if(eleName.length>50){
+    eleName = eleName.substring(0,50)
+  }
+  
+
   var elems = document.querySelectorAll("*")
   var arrayLength = elems.length;
 
@@ -474,18 +480,20 @@ function getFullName(e, loopCount) {
   return eleName;
 }
 
-function xpathHrefid(e) {
+function xpathHrefid(e, findType, name) {
   if (e.attributes && e.hasAttribute('id')) {
     var idValue = e.getAttribute('id')
-    var splitID = idValue.split(/(\d+)/);
-    var xpathReturn = `//${e.nodeName.toLowerCase()}`
-    for (var i = 0; i < splitID.length; i++) {
-      if (isNaN(splitID[i])) {
-        xpathReturn = xpathReturn + "[contains(@id, '" + splitID[i] + "')]"
+    if ((findType == "fullmatch" && idValue == name) || (findType == "contains" && idValue.includes(name)) || findType == "none"){
+        
+      var splitID = idValue.split(/(\d+)/);
+      var xpathReturn = `//${e.nodeName.toLowerCase()}`
+      for (var i = 0; i < splitID.length; i++) {
+        if (isNaN(splitID[i])) {
+          xpathReturn = xpathReturn + "[contains(@id, '" + splitID[i] + "')]"
+        }
       }
-    }
-    return this.preciseXPath(xpathReturn, e)
-  }
+      return this.preciseXPath(xpathReturn, e)
+  }}
   return null
 }
 
@@ -506,9 +514,10 @@ function xpathLink(e) {
   return null
 }
 
-function xpathImg(e) {
+function xpathImg(e, findType, name) {
   if (e.nodeName == 'IMG') {
-    if (e.alt != '') {
+    if((findType == "fullmatch" && e.alt == name) || (findType == "contains" && e.alt.includes(name)) || (findType == "none" &&e.alt != '')){
+    //if (e.alt != '') {
       return this.preciseXPath(
         '//' +
         this.xpathHtmlElement('img') +
@@ -517,7 +526,8 @@ function xpathImg(e) {
         ']',
         e
       )
-    } else if (e.title != '') {
+    //} else if (e.title != '') {
+    } else if ((findType == "fullmatch" && e.title == name) || (findType == "contains" && e.title.includes(name)) || (findType == "none" &&e.title != '')){
       return this.preciseXPath(
         '//' +
         this.xpathHtmlElement('img') +
@@ -526,7 +536,8 @@ function xpathImg(e) {
         ']',
         e
       )
-    } else if (e.src != '') {
+    //} else if (e.src != '') {
+    } else if ((findType == "fullmatch" && e.src == name) || (findType == "contains" && e.src.includes(name)) || (findType == "none" &&e.src != '')){
       return this.preciseXPath(
         '//' +
         this.xpathHtmlElement('img') +
@@ -540,14 +551,14 @@ function xpathImg(e) {
   return null
 }
 
-function xpathAttr(e) {
+function xpathAttr(e, findType, name) {
   const PREFERRED_ATTRIBUTES = [
     'id',
     'name',
     'value',
     'type',
     'action',
-    'onclick',
+    'onclick','data-dyn-title','aria-labelledby','aria-label','aria-describedby','aria-description','aria-details','aria-valuenow','aria-valuetext'
   ]
   let i = 0
 
@@ -576,15 +587,17 @@ function xpathAttr(e) {
     for (i = 0; i < PREFERRED_ATTRIBUTES.length; i++) {
       let name = PREFERRED_ATTRIBUTES[i]
       if (attsMap[name] != null) {
-        names.push(name)
-        let locator = attributesXPath.call(
-          this,
-          e.nodeName.toLowerCase(),
-          names,
-          attsMap
-        )
-        if (e == this.findElement(locator)) {
-          return locator
+        if((findType == "fullmatch" && attsMap[name] == name) || (findType == "contains" && attsMap[name].includes(name)) || (findType == "none")){  
+          names.push(name)
+          let locator = attributesXPath.call(
+            this,
+            e.nodeName.toLowerCase(),
+            names,
+            attsMap
+          )
+          if (e == this.findElement(locator)) {
+            return locator
+          }
         }
       }
     }
@@ -592,13 +605,13 @@ function xpathAttr(e) {
   return null
 }
 
-function xpathAttr(e) {
+function xpathAttr(e, findType, name) {
   const PREFERRED_ATTRIBUTES = [
     'name',
     'value',
     'type',
     'action',
-    'onclick',
+    'onclick','data-dyn-title','aria-labelledby','aria-label','aria-describedby','aria-description','aria-details','aria-valuenow','aria-valuetext'
   ]
   let i = 0
 
@@ -627,15 +640,17 @@ function xpathAttr(e) {
     for (i = 0; i < PREFERRED_ATTRIBUTES.length; i++) {
       let name = PREFERRED_ATTRIBUTES[i]
       if (attsMap[name] != null) {
-        names.push(name)
-        let locator = attributesXPath.call(
-          this,
-          e.nodeName.toLowerCase(),
-          names,
-          attsMap
-        )
-        if (e == this.findElement(locator)) {
-          return locator
+        if((findType == "fullmatch" && attsMap[name] == name) || (findType == "contains" && attsMap[name].includes(name)) || (findType == "none")){
+          names.push(name)
+          let locator = attributesXPath.call(
+            this,
+            e.nodeName.toLowerCase(),
+            names,
+            attsMap
+          )
+          if (e == this.findElement(locator)) {
+            return locator
+          }
         }
       }
     }
@@ -643,7 +658,7 @@ function xpathAttr(e) {
   return null
 }
 
-function xpathIdRelativePartial(e) {
+function xpathIdRelativePartial(e, findType, name) {
   let path = ''
   let current = e
   while (current != null) {
@@ -653,18 +668,20 @@ function xpathIdRelativePartial(e) {
         1 == current.parentNode.nodeType && // ELEMENT_NODE
         current.parentNode.getAttribute('id')
       ) {
-        var idValue = current.parentNode.getAttribute('id')
-        var splitID = idValue.split(/(\d+)/);
-        var xpathReturn = `//${current.parentNode.nodeName.toLowerCase()}`
-        for (var i = 0; i < splitID.length; i++) {
-          if (isNaN(splitID[i])) {
-            xpathReturn = xpathReturn + "[contains(@id, '" + splitID[i] + "')]"
+        if ((findType == "fullmatch" && current.parentNode.getAttribute('id') == name) || (findType == "contains" && current.parentNode.getAttribute('id').includes(name)) || findType == "none"){
+          var idValue = current.parentNode.getAttribute('id')
+          var splitID = idValue.split(/(\d+)/);
+          var xpathReturn = `//${current.parentNode.nodeName.toLowerCase()}`
+          for (var i = 0; i < splitID.length; i++) {
+            if (isNaN(splitID[i])) {
+              xpathReturn = xpathReturn + "[contains(@id, '" + splitID[i] + "')]"
+            }
           }
+          return this.preciseXPath(xpathReturn +
+            path,
+            e
+          )
         }
-        return this.preciseXPath(xpathReturn +
-          path,
-          e
-        )
       }
     } else {
       return null
@@ -674,7 +691,7 @@ function xpathIdRelativePartial(e) {
   return null
 }
 
-function xpathIdRelative(e) {
+function xpathIdRelative(e, findType, name) {
   let path = ''
   let current = e
   while (current != null) {
@@ -684,6 +701,7 @@ function xpathIdRelative(e) {
         1 == current.parentNode.nodeType && // ELEMENT_NODE
         current.parentNode.getAttribute('id')
       ) {
+        if ((findType == "fullmatch" && current.parentNode.getAttribute('id') == name) || (findType == "contains" && current.parentNode.getAttribute('id').includes(name)) || findType == "none"){
         return this.preciseXPath(
           '//' +
           this.xpathHtmlElement(current.parentNode.nodeName.toLowerCase()) +
@@ -693,6 +711,7 @@ function xpathIdRelative(e) {
           path,
           e
         )
+        }
       }
     } else {
       return null
@@ -752,8 +771,8 @@ function xpathPosition(
   return null
 }
 
-function xpathInnerText(el) {
-  if (el.innerText) {
+function xpathInnerText(el, findType, name) {
+  if((findType == "fullmatch" && el.innerText == name) || (findType == "contains" && el.innerText.includes(name)) || (findType == "none" && el.innerText)) {
     return `xpath=//${el.nodeName}[contains(.,'${el.innerText}')]`
   } else {
     return null
@@ -982,7 +1001,13 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
   name = window.prompt("Add element with name", name);
   var i = 0;
   var locators = "";
-  var locator = xpathHref(target);
+
+
+  
+
+  
+
+  var locator = xpathImg(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -992,7 +1017,7 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathLink(target);
+  var locator = xpathHrefid(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -1002,7 +1027,7 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathImg(target);
+  var locator = xpathIdRelative(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -1012,7 +1037,7 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathHrefid(target);
+  var locator = xpathIdRelativePartial(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -1022,7 +1047,7 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathIdRelative(target);
+  var locator = xpathAttr(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -1032,7 +1057,7 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathIdRelativePartial(target);
+  var locator = xpathInnerText(target, "fullmatch", name);
   if (locator != null) {
     if (i == 0) {
       locators = locator;
@@ -1042,33 +1067,161 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
     }
   }
 
-  var locator = xpathAttr(target);
-  if (locator != null) {
-    if (i == 0) {
-      locators = locator;
-      i++;
-    } else {
-      locators = locators + ",," + locator;
+
+  if(locators == ""){
+    var locator = xpathImg(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathHrefid(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathIdRelative(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathIdRelativePartial(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathAttr(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathInnerText(target, "contains", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
     }
   }
 
-  var locator = xpathInnerText(target);
-  if (locator != null) {
-    if (i == 0) {
-      locators = locator;
-      i++;
-    } else {
-      locators = locators + ",," + locator;
+  if(locators == ""){
+    var locator = xpathImg(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathHrefid(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathIdRelative(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathIdRelativePartial(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathAttr(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathInnerText(target, "none", name);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
     }
   }
 
-  var locator = xpathPosition(target);
-  if (locator != null) {
-    if (i == 0) {
-      locators = locator;
-      i++;
-    } else {
-      locators = locators + ",," + locator;
+
+  if(locators == ""){
+    var locator = xpathHref(target);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathLink(target);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
+    }
+
+    var locator = xpathPosition(target);
+    if (locator != null) {
+      if (i == 0) {
+        locators = locator;
+        i++;
+      } else {
+        locators = locators + ",," + locator;
+      }
     }
   }
 

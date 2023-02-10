@@ -11,7 +11,7 @@
       "default_title": "The Test Mart Add Element"
    },
    "content_scripts": [ {
-      "js": [  "jquery.js","contentscript.js" ],
+      "js": [  "jquery.js","contentscript.js", "robula-plus.js" ],
       "matches": [ "\u003Call_urls>" ]
 	}
    ],
@@ -29,5 +29,11 @@
    "minimum_chrome_version": "49.0.0",
    "name": "The Test Mart Add Element",
    "permissions": [ "activeTab", "contextMenus", "storage", "webRequest", "webRequestBlocking", "*://*.testmartsetparams.com/*"],
-   "version": "0.0.6.0"
+   "version": "0.0.6.0",
+   "commands": {
+      "_execute_browser_action": {
+         "suggested_key": "Ctrl+I",
+         "description": "Toggle open popup"
+      }
+   }
 }

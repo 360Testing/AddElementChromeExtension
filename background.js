@@ -139,7 +139,7 @@ chrome.storage.local.get(["CUSTOMER", "PROJECT", "SERVER"], function (items) {
 			console.log("PROJECT=" + objURL.searchParams.get("project")); 
 		 }		 
 		 if (objURL.searchParams.has("server")){
-			SERVER = objURL.searchParams.get("server");
+			SERVER = objURL.searchParams.get("serverelement");
 			console.log("SERVER=" + objURL.searchParams.get("server")); 
 		 }
 		 

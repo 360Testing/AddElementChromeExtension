@@ -1,3 +1,4 @@
+/* global builder RobulaPlus */
 console.log("TheTestMart content script LOADED");
 
 
@@ -1002,10 +1003,17 @@ chrome.extension.sendMessage({ type: "get_project" }, function (response) {
   var i = 0;
   var locators = "";
 
+  const robulaPlus = new RobulaPlus();
 
-  
-
-  
+  var locator = robulaPlus.getRobustXPath(target, document);
+  if (locator != null) {
+    if (i == 0) {
+      locators = locator;
+      i++;
+    } else {
+      locators = locators + ",," + locator;
+    }
+  }
 
   var locator = xpathImg(target, "fullmatch", name);
   if (locator != null) {
@@ -1396,7 +1404,7 @@ function toggle_active_state() {
     $('*').off('click', add_xpath_on_click);
     document.removeEventListener("mouseover", DIOnMouseOver, true);
     document.removeEventListener("mouseout", DIOnMouseOut, true);
-    currentElem.style.outlineStyle = 'none';
+    if(currentElem) currentElem.style.outlineStyle = 'none';
   }
 }
 
